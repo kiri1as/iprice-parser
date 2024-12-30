@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    container_name: iprice_parser
+    working_dir: /app
+    volumes:
+      - ..:/app
+    depends_on:
+      - pg_db
+    environment:
+      - DATABASE_URL=postgresql://app-iprice:36RtYqW75@pg_db:5432/iprice
+    restart: always
+    healthcheck:
+      test: [ "CMD", "python", "healthcheck.py" ]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+
+  pg_db:
+    image: postgres:latest
+    container_name: iprice_db
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: app-iprice
+      POSTGRES_PASSWORD: 36RtYqW75
+      POSTGRES_DB: iprice
+    volumes:
+      - iprice_db_data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app-iprice -d iprice"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  iprice_db_data:
